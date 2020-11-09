@@ -5,6 +5,10 @@ VisualStudioVersion = 15.0.28307.1267
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Lab1", "Lab1\Lab1.vcxproj", "{D8922B81-9489-4346-96FF-E9C1E366FA04}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Lab1_2_Sum_Matrix", "Lab1_2_Sum_Matrix\Lab1_2_Sum_Matrix.vcxproj", "{AC0FBC59-9DB7-44A4-925E-E52339D971DD}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Lab2_1_Integer_Factorization", "Lab2_1_Integer_Factorization\Lab2_1_Integer_Factorization.vcxproj", "{06D41872-E1B9-4EC0-8122-7C4CF87834D5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -15,6 +19,14 @@ Global
 		{D8922B81-9489-4346-96FF-E9C1E366FA04}.Debug|x64.Build.0 = Debug|x64
 		{D8922B81-9489-4346-96FF-E9C1E366FA04}.Release|x64.ActiveCfg = Release|x64
 		{D8922B81-9489-4346-96FF-E9C1E366FA04}.Release|x64.Build.0 = Release|x64
+		{AC0FBC59-9DB7-44A4-925E-E52339D971DD}.Debug|x64.ActiveCfg = Debug|x64
+		{AC0FBC59-9DB7-44A4-925E-E52339D971DD}.Debug|x64.Build.0 = Debug|x64
+		{AC0FBC59-9DB7-44A4-925E-E52339D971DD}.Release|x64.ActiveCfg = Release|x64
+		{AC0FBC59-9DB7-44A4-925E-E52339D971DD}.Release|x64.Build.0 = Release|x64
+		{06D41872-E1B9-4EC0-8122-7C4CF87834D5}.Debug|x64.ActiveCfg = Debug|x64
+		{06D41872-E1B9-4EC0-8122-7C4CF87834D5}.Debug|x64.Build.0 = Debug|x64
+		{06D41872-E1B9-4EC0-8122-7C4CF87834D5}.Release|x64.ActiveCfg = Release|x64
+		{06D41872-E1B9-4EC0-8122-7C4CF87834D5}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

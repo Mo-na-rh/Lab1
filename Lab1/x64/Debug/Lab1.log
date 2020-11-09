@@ -1,12 +1,1 @@
-﻿  Compiling CUDA source file kernel.cu...
-  
-  D:\ProjectsCSharp\Lab1\Lab1>"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.1\bin\nvcc.exe" -gencode=arch=compute_52,code=\"sm_52,compute_52\" --use-local-env -ccbin "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.16.27023\bin\HostX86\x64" -x cu   -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.1\include" -I"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.1\include"  -G   --keep-dir x64\Debug -maxrregcount=0  --machine 64 --compile -cudart static  -g   -DWIN32 -DWIN64 -D_DEBUG -D_CONSOLE -D_MBCS -Xcompiler "/EHsc /W3 /nologo /Od /Fdx64\Debug\vc141.pdb /FS /Zi /RTC1 /MDd " -o x64\Debug\kernel.cu.obj "D:\ProjectsCSharp\Lab1\Lab1\kernel.cu" 
-C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\malloc.h(160): warning : expression has no effect
-  
-  device_functions.h is an internal header file and must not be used directly.  This file will be removed in a future CUDA release.  Please use cuda_runtime_api.h or cuda_runtime.h instead.
-C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\malloc.h(160): warning : expression has no effect
-  
-  kernel.cu
-  device_functions.h is an internal header file and must not be used directly.  This file will be removed in a future CUDA release.  Please use cuda_runtime_api.h or cuda_runtime.h instead.
-D:/ProjectsCSharp/Lab1/Lab1/kernel.cu(46): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-  Lab1.vcxproj -> D:\ProjectsCSharp\Lab1\x64\Debug\Lab1.exe
+﻿  Lab1.vcxproj -> D:\ProjectsCSharp\Lab1\x64\Debug\Lab1.exe
