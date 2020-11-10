@@ -1,121 +1,199 @@
+#include <cstdlib>
+#include <ctime>
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
+#include <cuda.h>
+#include <curand.h>
+#include <cuda_runtime.h>
+#include <curand_kernel.h>
+
 
 #include <stdio.h>
+#include <string>
+#include <winsock.h>
+typedef unsigned long long uint64;
 
-cudaError_t addWithCuda(int *c, const int *a, const int *b, unsigned int size);
+static double t0 = 0;
 
-__global__ void addKernel(int *c, const int *a, const int *b)
-{
-    int i = threadIdx.x;
-    c[i] = a[i] + b[i];
+double getTime() {
+  timeval tv;
+  time_t tv1;
+  //gettimeofday(&tv, NULL);
+	time(&tv1);
+	tv.tv_sec = tv1;
+	tv.tv_usec = 0;
+  double t = tv.tv_sec + 1e-6 * tv.tv_usec;
+  double s = t - t0;
+  t0 = t;
+  return s;
 }
+
+__host__ __device__ uint64 gcd(uint64 u, uint64 v) {
+  uint64 shift;
+  if (u == 0) return v;
+  if (v == 0) return u;
+  for (shift = 0; ((u | v) & 1) == 0; ++shift) {
+    u >>= 1;
+    v >>= 1;
+  }
+    
+  while ((u & 1) == 0)
+    u >>= 1;
+    
+  do {
+    while ((v & 1) == 0)
+      v >>= 1;
+    
+    if (u > v) {
+      uint64 t = v; v = u; u = t;}
+    v = v - u; 
+  } while (v != 0);
+  
+  return u << shift;
+}
+
+__global__ void clearPara(uint64 * da, uint64 * dc, uint64 m) {
+  int idx = blockIdx.x * blockDim.x + threadIdx.x;
+  da[idx] = da[idx] % (m - 1) + 1;
+  dc[idx] = dc[idx] % (m - 1) + 1;
+}
+
+__global__ void pollardKernel(uint64 num, uint64 * resultd, uint64 * dx, uint64 * dy, uint64 * da, uint64 * dc) {
+  int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+  uint64 n = num;
+  uint64 x, y, a, c;
+  x = dx[idx];
+  y = dy[idx];
+  a = da[idx];
+  c = dc[idx];
+
+  x = (a * x * x + c) % n;
+  y =  a * y * y + c;
+  y = (a * y * y + c) % n;
+
+  uint64 z = x > y ? (x - y) : (y - x);
+  uint64 d = gcd(z, n);
+  
+  dx[idx] = x;
+  dy[idx] = y;
+
+  if (d != 1 && d != n) *resultd = d;
+}
+
+
+uint64 pollard(uint64 num)
+{
+  uint64 upper = sqrt(num), result = 0;
+
+  int nT = 256, nB = 256;
+
+  if (num % 2 == 0) return 2;
+  if (num % 3 == 0) return 3;
+  if (num % 5 == 0) return 5;
+  if (num % 7 == 0) return 7;
+  
+  if (upper * upper == num) return upper;
+
+  uint64 *resultd = NULL, *dx = NULL, *dy = NULL, *da = NULL, *dc = NULL;
+  cudaMalloc((void**)&resultd, sizeof(uint64));
+  cudaMemset(resultd, 0, sizeof(uint64));
+
+  cudaMalloc((void**)&dx, nB * nT * sizeof(uint64));
+  cudaMalloc((void**)&dy, nB * nT * sizeof(uint64));
+  cudaMalloc((void**)&da, nB * nT * sizeof(uint64));
+  cudaMalloc((void**)&dc, nB * nT * sizeof(uint64));
+  
+  curandGenerator_t gen;
+  curandCreateGenerator(&gen, CURAND_RNG_QUASI_SOBOL64);
+  curandSetPseudoRandomGeneratorSeed(gen, time(NULL));
+  curandGenerateLongLong(gen, da, nB * nT);
+  curandGenerateLongLong(gen, dc, nB * nT);
+  cudaMemset(dx, 0, nB * nT * sizeof(uint64));
+  cudaMemset(dy, 0, nB * nT * sizeof(uint64));
+  clearPara<<<nB, nT>>>(da, dc, upper);
+
+  while(result == 0) {
+    pollardKernel<<<nB, nT>>>(num, resultd, dx, dy, da, dc);
+    cudaMemcpy(&result, resultd, sizeof(uint64), cudaMemcpyDeviceToHost);
+  }
+  
+  cudaFree(dx);
+  cudaFree(dy);
+  cudaFree(da);
+  cudaFree(dc);
+  cudaFree(resultd);
+  curandDestroyGenerator(gen);
+  return result;
+}
+
+uint64 pollardhost(uint64 num)
+{
+  uint64 upper = sqrt(num), result = 0;
+
+  if (num % 2 == 0) return 2;
+  if (num % 3 == 0) return 3;
+  if (num % 5 == 0) return 5;
+  if (num % 7 == 0) return 7;  
+
+  if (upper * upper == num) return upper;
+
+  bool quit = false;
+
+  uint64 x = 0;
+  uint64 a = rand() % (upper-1) + 1;
+  uint64 c = rand() % (upper-1) + 1;
+  uint64 y, d;
+
+  y = x;
+  d = 1;
+
+  do {
+    x = (a * x * x + c) % num;
+    y =  a * y * y + c;
+    y = (a * y * y + c) % num;
+    uint64 z = x > y ? (x - y) : (y - x);
+    d = gcd(z, num);
+  } while (d == 1 && !quit);
+
+
+  if (d != 1 && d != num ) {
+    quit = true;
+    result = d;
+  }
+    
+  return result;
+}
+
 
 int main()
 {
-    const int arraySize = 5;
-    const int a[arraySize] = { 1, 2, 3, 4, 5 };
-    const int b[arraySize] = { 10, 20, 30, 40, 50 };
-    int c[arraySize] = { 0 };
+	tryAgain: // это лейбл
+  getTime();
+  srand(time(NULL));
 
-    // Add vectors in parallel.
-    cudaError_t cudaStatus = addWithCuda(c, a, b, arraySize);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "addWithCuda failed!");
-        return 1;
-    }
 
-    printf("{1,2,3,4,5} + {10,20,30,40,50} = {%d,%d,%d,%d,%d}\n",
-        c[0], c[1], c[2], c[3], c[4]);
+  int n =0;
+  printf("Input num: ");
+  scanf("%d", &n);             //задаем размер
+  uint64 num = n;
 
-    // cudaDeviceReset must be called before exiting in order for profiling and
-    // tracing tools such as Nsight and Visual Profiler to show complete traces.
-    cudaStatus = cudaDeviceReset();
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaDeviceReset failed!");
-        return 1;
-    }
+  uint64 result = pollard(num);
 
-    return 0;
+  printf("Result(GPU): %lld = %lld * %lld\n", num, result, num / result);
+
+  printf("Time  : %.6fs\n", getTime());
+
+  int t2 = clock();
+  result = pollardhost(num);
+  printf("Result(CPU): %lld = %lld * %lld\n", num, result, num / result);
+  printf("Time  : %.6fs\n", getTime());
+
+	goto tryAgain; // а это оператор goto
+  return 0;
 }
 
-// Helper function for using CUDA to add vectors in parallel.
-cudaError_t addWithCuda(int *c, const int *a, const int *b, unsigned int size)
-{
-    int *dev_a = 0;
-    int *dev_b = 0;
-    int *dev_c = 0;
-    cudaError_t cudaStatus;
 
-    // Choose which GPU to run on, change this on a multi-GPU system.
-    cudaStatus = cudaSetDevice(0);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaSetDevice failed!  Do you have a CUDA-capable GPU installed?");
-        goto Error;
-    }
 
-    // Allocate GPU buffers for three vectors (two input, one output)    .
-    cudaStatus = cudaMalloc((void**)&dev_c, size * sizeof(int));
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        goto Error;
-    }
 
-    cudaStatus = cudaMalloc((void**)&dev_a, size * sizeof(int));
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        goto Error;
-    }
-
-    cudaStatus = cudaMalloc((void**)&dev_b, size * sizeof(int));
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMalloc failed!");
-        goto Error;
-    }
-
-    // Copy input vectors from host memory to GPU buffers.
-    cudaStatus = cudaMemcpy(dev_a, a, size * sizeof(int), cudaMemcpyHostToDevice);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMemcpy failed!");
-        goto Error;
-    }
-
-    cudaStatus = cudaMemcpy(dev_b, b, size * sizeof(int), cudaMemcpyHostToDevice);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMemcpy failed!");
-        goto Error;
-    }
-
-    // Launch a kernel on the GPU with one thread for each element.
-    addKernel<<<1, size>>>(dev_c, dev_a, dev_b);
-
-    // Check for any errors launching the kernel
-    cudaStatus = cudaGetLastError();
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "addKernel launch failed: %s\n", cudaGetErrorString(cudaStatus));
-        goto Error;
-    }
-    
-    // cudaDeviceSynchronize waits for the kernel to finish, and returns
-    // any errors encountered during the launch.
-    cudaStatus = cudaDeviceSynchronize();
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launching addKernel!\n", cudaStatus);
-        goto Error;
-    }
-
-    // Copy output vector from GPU buffer to host memory.
-    cudaStatus = cudaMemcpy(c, dev_c, size * sizeof(int), cudaMemcpyDeviceToHost);
-    if (cudaStatus != cudaSuccess) {
-        fprintf(stderr, "cudaMemcpy failed!");
-        goto Error;
-    }
-
-Error:
-    cudaFree(dev_c);
-    cudaFree(dev_a);
-    cudaFree(dev_b);
-    
-    return cudaStatus;
-}

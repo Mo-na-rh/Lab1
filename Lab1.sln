@@ -11,20 +11,34 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Lab2_1_Integer_Factorizatio
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM = Debug|ARM
 		Debug|x64 = Debug|x64
+		Release|ARM = Release|ARM
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D8922B81-9489-4346-96FF-E9C1E366FA04}.Debug|ARM.ActiveCfg = Debug|x64
+		{D8922B81-9489-4346-96FF-E9C1E366FA04}.Debug|ARM.Build.0 = Debug|x64
 		{D8922B81-9489-4346-96FF-E9C1E366FA04}.Debug|x64.ActiveCfg = Debug|x64
 		{D8922B81-9489-4346-96FF-E9C1E366FA04}.Debug|x64.Build.0 = Debug|x64
+		{D8922B81-9489-4346-96FF-E9C1E366FA04}.Release|ARM.ActiveCfg = Release|ARM
+		{D8922B81-9489-4346-96FF-E9C1E366FA04}.Release|ARM.Build.0 = Release|ARM
 		{D8922B81-9489-4346-96FF-E9C1E366FA04}.Release|x64.ActiveCfg = Release|x64
 		{D8922B81-9489-4346-96FF-E9C1E366FA04}.Release|x64.Build.0 = Release|x64
+		{AC0FBC59-9DB7-44A4-925E-E52339D971DD}.Debug|ARM.ActiveCfg = Debug|x64
+		{AC0FBC59-9DB7-44A4-925E-E52339D971DD}.Debug|ARM.Build.0 = Debug|x64
 		{AC0FBC59-9DB7-44A4-925E-E52339D971DD}.Debug|x64.ActiveCfg = Debug|x64
 		{AC0FBC59-9DB7-44A4-925E-E52339D971DD}.Debug|x64.Build.0 = Debug|x64
+		{AC0FBC59-9DB7-44A4-925E-E52339D971DD}.Release|ARM.ActiveCfg = Release|ARM
+		{AC0FBC59-9DB7-44A4-925E-E52339D971DD}.Release|ARM.Build.0 = Release|ARM
 		{AC0FBC59-9DB7-44A4-925E-E52339D971DD}.Release|x64.ActiveCfg = Release|x64
 		{AC0FBC59-9DB7-44A4-925E-E52339D971DD}.Release|x64.Build.0 = Release|x64
+		{06D41872-E1B9-4EC0-8122-7C4CF87834D5}.Debug|ARM.ActiveCfg = Debug|ARM
+		{06D41872-E1B9-4EC0-8122-7C4CF87834D5}.Debug|ARM.Build.0 = Debug|ARM
 		{06D41872-E1B9-4EC0-8122-7C4CF87834D5}.Debug|x64.ActiveCfg = Debug|x64
 		{06D41872-E1B9-4EC0-8122-7C4CF87834D5}.Debug|x64.Build.0 = Debug|x64
+		{06D41872-E1B9-4EC0-8122-7C4CF87834D5}.Release|ARM.ActiveCfg = Release|ARM
+		{06D41872-E1B9-4EC0-8122-7C4CF87834D5}.Release|ARM.Build.0 = Release|ARM
 		{06D41872-E1B9-4EC0-8122-7C4CF87834D5}.Release|x64.ActiveCfg = Release|x64
 		{06D41872-E1B9-4EC0-8122-7C4CF87834D5}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
