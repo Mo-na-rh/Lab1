@@ -24,21 +24,7 @@ using namespace std;
 
 typedef unsigned long long uint64;
 
-static double t0 = 0;
-
-double getTime() {
-  timeval tv;
-  time_t tv1;
-  //gettimeofday(&tv, NULL);
-	time(&tv1);
-	tv.tv_sec = tv1;
-	tv.tv_usec = 0;
-  double t = tv.tv_sec + 1e-6 * tv.tv_usec;
-  double s = t - t0;
-  t0 = t;
-  return s;
-}
-
+// Нахождение НОД
 __host__ __device__ uint64 gcd(uint64 u, uint64 v) {
   uint64 shift;
   if (u == 0) return v;
@@ -61,6 +47,13 @@ __host__ __device__ uint64 gcd(uint64 u, uint64 v) {
   } while (v != 0);
   
   return u << shift;
+}
+
+__host__ __device__ bool prime(uint64 n){ 
+	for(uint64 i=2;i<=sqrt(n);i++)
+		if(n%i==0)
+			return false;
+	return true;
 }
 
 __global__ void clearPara(uint64 * da, uint64 * dc, uint64 m) {
@@ -101,6 +94,8 @@ uint64 pollard(uint64 num)
   if (num % 5 == 0) return 5;
   if (num % 7 == 0) return 7;
   if (upper * upper == num) return upper;
+  if (prime(num)) return num;
+	
   uint64 *resultd = NULL, *dx = NULL, *dy = NULL, *da = NULL, *dc = NULL;
   cudaMalloc((void**)&resultd, sizeof(uint64));
   cudaMemset(resultd, 0, sizeof(uint64));
@@ -140,6 +135,7 @@ uint64 pollardhost(uint64 num)
   if (num % 7 == 0) return 7;  
 
   if (upper * upper == num) return upper;
+  if (prime(num)) return num;
 
   bool quit = false;
 
@@ -177,37 +173,94 @@ int main()
 	
   auto elapsedTimeInMsGPU = 0.0f;
   float elapsedTimeInMsCPU = 0.0f;
-  StopWatchInterface *timer = NULL;
-  StopWatchInterface *timer2 = NULL;
+  StopWatchInterface *timerCPU = NULL;
+  StopWatchInterface *timerGPU = NULL;
 
-  int n =0;
+  uint64 n = 0;
   printf("Input num: ");
   scanf("%d", &n);             //задаем размер
   uint64 num = n;
 
-    //SDK timer
-  sdkCreateTimer(&timer2);
-  sdkStartTimer(&timer2);
-	
-  uint64 result = pollard(num);
+  //
+   uint64 result;
+	uint64 prevNum;
+	string res1;
+	string res2;
+	string res3;
+	string res4;
+	string res5;
+	string res6;
+	string res7;
+	uint64 rslt;
+	string resultString;
+	const char * resultStr;
+  //
 
-    sdkStopTimer(&timer2);
-  elapsedTimeInMsGPU = sdkGetTimerValue(&timer2);
+    //SDK timer
+  sdkCreateTimer(&timerGPU);
+  sdkStartTimer(&timerGPU);
+
+	//
+   result = pollard(num);	
+  prevNum = num/result;
+   res1 = "Result(GPU): ";
+   res2 = to_string(num);
+   res3 = " = ";
+   res4 = to_string(result);
+   res5 = " * ";
+   resultString = res1+res2+res3+res4;  
+  while(!prime(prevNum)) 
+  {
+   rslt = pollard(prevNum);	
+   prevNum = prevNum/rslt; 	
+   res6 = to_string(rslt);
+   resultString += res5 + res6;   
+  }
+  res7 = to_string(prevNum);
+  resultString += res5 + res7;
+  resultString += "\n";	
+  resultStr = resultString.c_str();
+	//
 	
-  printf("Result(GPU): %lld = %lld * %lld\n", num, result, num / result);
+  sdkStopTimer(&timerGPU);
+  elapsedTimeInMsGPU = sdkGetTimerValue(&timerGPU);
+	
+  //printf("Result(GPU): %lld = %lld * %lld\n", num, result, num / result);  
+  printf(resultStr);
   printf("Time  : %.6fs\n", elapsedTimeInMsGPU);
 
-  //int t2 = clock();
   //SDK timer
-  sdkCreateTimer(&timer);
-  sdkStartTimer(&timer);
+  sdkCreateTimer(&timerCPU);
+  sdkStartTimer(&timerCPU);
 	
-  result = pollardhost(num);
+  //result = pollardhost(num);
+	//
+  result = pollardhost(num);	
+  prevNum = num/result;
+  res1 = "Result(CPU): ";
+  res2 = to_string(num);
+  res3 = " = ";
+  res4 = to_string(result);
+  res5 = " * ";
+  resultString = res1+res2+res3+res4;  
+  while(!prime(prevNum)) 
+  {
+   rslt = pollardhost(prevNum);	
+   prevNum = prevNum/rslt; 	
+   res6 = to_string(rslt);
+   resultString += res5 + res6;   
+  }
+  res7 = to_string(prevNum);
+  resultString += res5 + res7;
+  resultString += "\n";	
+  resultStr = resultString.c_str();
+	//
 
-  sdkStopTimer(&timer);
-  elapsedTimeInMsCPU = sdkGetTimerValue(&timer);
+  sdkStopTimer(&timerCPU);
+  elapsedTimeInMsCPU = sdkGetTimerValue(&timerCPU);
 	
-  printf("Result(CPU): %lld = %lld * %lld\n", num, result, num / result);
+  //printf("Result(CPU): %lld = %lld * %lld\n", num, result, num / result);
+  printf(resultStr);
   printf("Time  : %.6fs\n", elapsedTimeInMsCPU);
 
   goto tryAgain; // а это оператор goto
