@@ -55,6 +55,9 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <ReferencePath>C:\ProgramData\NVIDIA Corporation\CUDA Samples\v11.1\common\inc;$(ReferencePath)</ReferencePath>
+    <SourcePath>C:\ProgramData\NVIDIA Corporation\CUDA Samples\v11.1\common\inc;$(SourcePath)</SourcePath>
+    <IncludePath>C:\ProgramData\NVIDIA Corporation\CUDA Samples\v11.1\common\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -99,6 +102,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <CudaCompile Include="kernel.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Lab1\helper_functions.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

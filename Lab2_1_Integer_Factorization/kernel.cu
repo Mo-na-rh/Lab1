@@ -1,17 +1,27 @@
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
+#include <stdlib.h>
+#include <time.h>
+
+//for __syncthreads()
+#ifndef __CUDACC__ 
+#define __CUDACC__
+#endif
+      
 #include <cstdlib>
 #include <ctime>
 
-#include "cuda_runtime.h"
-#include "device_launch_parameters.h"
-#include <cuda.h>
 #include <curand.h>
-#include <cuda_runtime.h>
-#include <curand_kernel.h>
-
 
 #include <stdio.h>
 #include <string>
 #include <winsock.h>
+// includes
+#include <helper_functions.h>  // helper for shared functions common to CUDA Samples
+#include <helper_cuda.h>       // helper functions for CUDA error checking and initialization
+
+using namespace std;
+
 typedef unsigned long long uint64;
 
 static double t0 = 0;
@@ -82,29 +92,22 @@ __global__ void pollardKernel(uint64 num, uint64 * resultd, uint64 * dx, uint64 
   if (d != 1 && d != n) *resultd = d;
 }
 
-
 uint64 pollard(uint64 num)
 {
   uint64 upper = sqrt(num), result = 0;
-
   int nT = 256, nB = 256;
-
   if (num % 2 == 0) return 2;
   if (num % 3 == 0) return 3;
   if (num % 5 == 0) return 5;
   if (num % 7 == 0) return 7;
-  
   if (upper * upper == num) return upper;
-
   uint64 *resultd = NULL, *dx = NULL, *dy = NULL, *da = NULL, *dc = NULL;
   cudaMalloc((void**)&resultd, sizeof(uint64));
   cudaMemset(resultd, 0, sizeof(uint64));
-
   cudaMalloc((void**)&dx, nB * nT * sizeof(uint64));
   cudaMalloc((void**)&dy, nB * nT * sizeof(uint64));
   cudaMalloc((void**)&da, nB * nT * sizeof(uint64));
-  cudaMalloc((void**)&dc, nB * nT * sizeof(uint64));
-  
+  cudaMalloc((void**)&dc, nB * nT * sizeof(uint64));  
   curandGenerator_t gen;
   curandCreateGenerator(&gen, CURAND_RNG_QUASI_SOBOL64);
   curandSetPseudoRandomGeneratorSeed(gen, time(NULL));
@@ -118,7 +121,6 @@ uint64 pollard(uint64 num)
     pollardKernel<<<nB, nT>>>(num, resultd, dx, dy, da, dc);
     cudaMemcpy(&result, resultd, sizeof(uint64), cudaMemcpyDeviceToHost);
   }
-  
   cudaFree(dx);
   cudaFree(dy);
   cudaFree(da);
@@ -170,27 +172,46 @@ uint64 pollardhost(uint64 num)
 int main()
 {
 	tryAgain: // это лейбл
-  getTime();
+  //getTime();
   srand(time(NULL));
-
+	
+  auto elapsedTimeInMsGPU = 0.0f;
+  float elapsedTimeInMsCPU = 0.0f;
+  StopWatchInterface *timer = NULL;
+  StopWatchInterface *timer2 = NULL;
 
   int n =0;
   printf("Input num: ");
   scanf("%d", &n);             //задаем размер
   uint64 num = n;
 
+    //SDK timer
+  sdkCreateTimer(&timer2);
+  sdkStartTimer(&timer2);
+	
   uint64 result = pollard(num);
 
+    sdkStopTimer(&timer2);
+  elapsedTimeInMsGPU = sdkGetTimerValue(&timer2);
+	
   printf("Result(GPU): %lld = %lld * %lld\n", num, result, num / result);
+  printf("Time  : %.6fs\n", elapsedTimeInMsGPU);
 
-  printf("Time  : %.6fs\n", getTime());
-
-  int t2 = clock();
+  //int t2 = clock();
+  //SDK timer
+  sdkCreateTimer(&timer);
+  sdkStartTimer(&timer);
+	
   result = pollardhost(num);
-  printf("Result(CPU): %lld = %lld * %lld\n", num, result, num / result);
-  printf("Time  : %.6fs\n", getTime());
 
-	goto tryAgain; // а это оператор goto
+  sdkStopTimer(&timer);
+  elapsedTimeInMsCPU = sdkGetTimerValue(&timer);
+	
+  printf("Result(CPU): %lld = %lld * %lld\n", num, result, num / result);
+  printf("Time  : %.6fs\n", elapsedTimeInMsCPU);
+
+  goto tryAgain; // а это оператор goto
+	
   return 0;
 }
 
