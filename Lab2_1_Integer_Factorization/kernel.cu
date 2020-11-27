@@ -110,9 +110,10 @@ uint64 pollard(uint64 num)
   curandGenerateLongLong(gen, dc, nB * nT);
   cudaMemset(dx, 0, nB * nT * sizeof(uint64));
   cudaMemset(dy, 0, nB * nT * sizeof(uint64));
+	// nB - gridSize nT - blockSize
   clearPara<<<nB, nT>>>(da, dc, upper);
 
-  while(result == 0) {
+ while(result == 0) {
     pollardKernel<<<nB, nT>>>(num, resultd, dx, dy, da, dc);
     cudaMemcpy(&result, resultd, sizeof(uint64), cudaMemcpyDeviceToHost);
   }
@@ -164,6 +165,15 @@ uint64 pollardhost(uint64 num)
   return result;
 }
 
+uint64 pollardhost1(uint64 num)
+{
+int result = 0;
+	while(result == 0) {
+		 result =  pollardhost(num);
+		}
+  return result;
+}
+
 
 int main()
 {
@@ -180,48 +190,44 @@ int main()
   printf("Input num: ");
   scanf("%d", &n);             //задаем размер
   uint64 num = n;
-
   //
-   uint64 result;
-	uint64 prevNum;
-	string res1;
-	string res2;
-	string res3;
-	string res4;
-	string res5;
-	string res6;
-	string res7;
-	uint64 rslt;
-	string resultString;
-	const char * resultStr;
+  uint64 result;
+  uint64 prevNum;
+  string res1;
+  string res2;
+  string res3;
+  string res4;
+  string res5;
+  string res6;
+  string res7;
+  uint64 rslt;
+  string resultString;
+  const char * resultStr;
   //
-
-    //SDK timer
-  sdkCreateTimer(&timerGPU);
-  sdkStartTimer(&timerGPU);
-
+		//SDK timer
+   sdkCreateTimer(&timerGPU);
+   sdkStartTimer(&timerGPU);
 	//
    result = pollard(num);	
-  prevNum = num/result;
+   prevNum = num/result;
    res1 = "Result(GPU): ";
    res2 = to_string(num);
    res3 = " = ";
    res4 = to_string(result);
    res5 = " * ";
    resultString = res1+res2+res3+res4;  
-  while(!prime(prevNum)) 
-  {
-   rslt = pollard(prevNum);	
-   prevNum = prevNum/rslt; 	
-   res6 = to_string(rslt);
-   resultString += res5 + res6;   
+   while(!prime(prevNum)) 
+   {
+	 rslt = pollard(prevNum);	
+	 prevNum = prevNum/rslt; 	
+     res6 = to_string(rslt);
+     resultString += res5 + res6;   
   }
   res7 = to_string(prevNum);
   resultString += res5 + res7;
   resultString += "\n";	
   resultStr = resultString.c_str();
-	//
-	
+	//	
   sdkStopTimer(&timerGPU);
   elapsedTimeInMsGPU = sdkGetTimerValue(&timerGPU);
 	
@@ -232,20 +238,18 @@ int main()
   //SDK timer
   sdkCreateTimer(&timerCPU);
   sdkStartTimer(&timerCPU);
-	
-  //result = pollardhost(num);
-	//
-  result = pollardhost(num);	
+
+  result = pollardhost1(num);	
   prevNum = num/result;
   res1 = "Result(CPU): ";
   res2 = to_string(num);
   res3 = " = ";
   res4 = to_string(result);
   res5 = " * ";
-  resultString = res1+res2+res3+res4;  
+  resultString = res1 + res2 + res3 + res4;  
   while(!prime(prevNum)) 
   {
-   rslt = pollardhost(prevNum);	
+   rslt = pollardhost1(prevNum);	
    prevNum = prevNum/rslt; 	
    res6 = to_string(rslt);
    resultString += res5 + res6;   
@@ -254,12 +258,10 @@ int main()
   resultString += res5 + res7;
   resultString += "\n";	
   resultStr = resultString.c_str();
-	//
 
   sdkStopTimer(&timerCPU);
   elapsedTimeInMsCPU = sdkGetTimerValue(&timerCPU);
 	
-  //printf("Result(CPU): %lld = %lld * %lld\n", num, result, num / result);
   printf(resultStr);
   printf("Time  : %.6fs\n", elapsedTimeInMsCPU);
 
